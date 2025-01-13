@@ -20,6 +20,9 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+AnyoneAI - Sprint Project 01.ipynb
+
+
 
 # Jupyter Notebook
 .ipynb_checkpoints

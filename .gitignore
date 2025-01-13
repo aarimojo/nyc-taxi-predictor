@@ -38,6 +38,7 @@ data/processed/*
 .venv
 venv/
 ENV/
+*venv
 
 # Docker
 .docker/ 

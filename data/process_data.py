@@ -2,6 +2,7 @@ import pandas as pd
 from typing import Optional, Tuple
 from pathlib import Path
 import argparse
+import os
 
 class DataLoader:
     def __init__(self, 
@@ -16,7 +17,43 @@ class DataLoader:
         self.year = year
         self.month = month
         self.split_data = split_data
+        self.taxi_type = "yellow"
         self.df = None
+
+    def save_processed_data(self, df: pd.DataFrame) -> None:
+        """Save the processed data to parquet file(s)."""
+        if not self.output_path:
+            return
+
+        # Create output directory if it doesn't exist
+        output_path = Path(self.output_path)
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        # Construct base filename
+        base_filename = f"{self.taxi_type}_processed"
+        if self.year:
+            base_filename += f"_{self.year}"
+        if self.month:
+            base_filename += f"_{int(self.month):02d}"
+
+        if self.split_data:
+            # Split into train (70%), validation (15%), and test (15%)
+            train_df = df.sample(frac=0.7, random_state=42)
+            remaining_df = df.drop(train_df.index)
+            val_df = remaining_df.sample(frac=0.5, random_state=42)
+            test_df = remaining_df.drop(val_df.index)
+
+            # Save split datasets
+            train_df.to_parquet(output_path / f"{base_filename}_train.parquet", index=False)
+            val_df.to_parquet(output_path / f"{base_filename}_val.parquet", index=False)
+            test_df.to_parquet(output_path / f"{base_filename}_test.parquet", index=False)
+            
+            print(f"Saved split datasets to {output_path}")
+        else:
+            # Save single dataset
+            output_file = output_path / f"{base_filename}.parquet"
+            df.to_parquet(output_file, index=False)
+            print(f"Saved processed dataset to {output_file}")
 
     def load_data(self) -> pd.DataFrame:
         """Load the dataset from the specified path."""
@@ -92,13 +129,7 @@ class DataLoader:
         df = self.join_vs_taxi_zones(df)
 
         # Save preprocessed data
-        if self.output_path:
-            if self.split_data:
-                paths = ['train', 'test', 'val']
-                for path in paths:
-                    df.sample(frac=0.33).to_parquet(f"{self.output_path}/{path}.parquet", index=False)
-            else:
-                df.to_parquet(self.output_path, index=False)
+        self.save_processed_data(df)
 
     def _calculate_trip_duration(self, df: pd.DataFrame) -> pd.DataFrame:
         """Calculate trip duration in minutes."""
@@ -130,16 +161,22 @@ class DataLoader:
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process NYC Taxi Trip data')
-    parser.add_argument('--data-path', type=str, default='data/raw/',
-                       help='Path to the data directory or file (default: data/raw/)')
-    parser.add_argument('--output-path', type=str, default='data/processed/',
-                       help='Path to save processed data (default: data/processed/)')
+
+    default_data_path = str(Path(os.getcwd()) / 'data' / 'raw')
+    default_output_path = str(Path(os.getcwd()) / 'data' / 'processed')
+    
+    parser.add_argument('--data-path', type=str, default=default_data_path,
+                       help=f'Path to the data directory or file (default: {default_data_path})')
+    parser.add_argument('--output-path', type=str, default=default_output_path,
+                       help=f'Path to save processed data (default: {default_output_path})')
     parser.add_argument('--year', type=str, default=None,
                        help='Year to process (e.g., 2022)')
     parser.add_argument('--month', type=str, default=None,
                        help='Month to process (e.g., 01)')
-    parser.add_argument('--split-data', action='store_true', default=True,
+    parser.add_argument('--split-data', action='store_true',
                        help='Split data into train/test/val sets')
+    parser.add_argument('--no-split-data', action='store_false', dest='split_data',
+                       help='Do not split data into train/test/val sets')
     
     args = parser.parse_args()
 

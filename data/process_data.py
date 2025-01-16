@@ -85,6 +85,23 @@ class DataLoader:
             ).dt.total_seconds() / 60
             df = df[df["trip_duration"] > 0]  # Remove invalid durations
 
+        if "passenger_count" in df.columns:
+            df = df[df["passenger_count"] <= 4]  # Keep only trips with passenger count <= 4
+        if "MTA_tax" in df.columns:
+            df = df[(df["MTA_tax"] >= 0) & (df["MTA_tax"] <= 0.50)]  # MTA_tax between 0 and 0.50
+        if "improvement_surcharge" in df.columns:
+            df = df[df["improvement_surcharge"] > 0 & (df["improvement_surcharge"] <= 0.30)] # Fixed value found in documentation
+        if "extra" in df.columns:
+            df = df[(df["extra"] > 0) & (df["extra"] < 1)]  # Extra surcharge between 0 and 1 (exclusive)
+        if "airport_fee" in df.columns:
+            df = df[(df["airport_fee"] > 0)]
+        if "tolls_amount" in df.columns:
+            df = df[(df["tolls_amount"] >= 0) & (df["tolls_amount"] <= 10)]  # Keep only valid tolls_amount values
+        if "RateCodeID" in df.columns:
+            df = df[(df["RateCodeID"] >= 0) & (df["RateCodeID"] <= 6)]  # Keep only valid RateCodeID values
+        if "Fare_amount" in df.columns:
+            df = df[(df["Fare_amount"] > 0)]
+
         df = self.remove_bad_date_data(df)
         df = self._calculate_trip_duration(df)
         df = self.remove_bad_trip_duration(df)
@@ -106,7 +123,7 @@ class DataLoader:
         return df
 
     def remove_bad_date_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Remove data with invalid date."""
+        """Remove data with invalid date.""" 
         df = df[df["tpep_pickup_datetime"] < df["tpep_dropoff_datetime"]]
         return df
     
@@ -119,6 +136,7 @@ class DataLoader:
     def remove_bad_trip_distance(self, df: pd.DataFrame) -> pd.DataFrame:
         """Remove data with invalid trip distance."""
         df = df[df["trip_distance"] > 0]
+        df = df[df["trip_distance"] <= 7]
         return df
 
     def join_vs_taxi_zones(self, df: pd.DataFrame) -> pd.DataFrame:

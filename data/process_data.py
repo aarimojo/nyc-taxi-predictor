@@ -178,10 +178,8 @@ class DataLoader:
     
     def remove_bad_trip_duration(self, df: pd.DataFrame) -> pd.DataFrame:
         """Remove data with invalid trip duration."""
-        df = df[df["trip_duration_pu"] > 0]
-        df = df[df["trip_duration_pu"] < 120]
-        df = df[df["trip_duration_do"] > 0]
-        df = df[df["trip_duration_do"] < 120]
+        df = df[df["trip_duration"] > 0]
+        df = df[df["trip_duration"] < 120]
         return df
     
     def remove_bad_trip_distance(self, df: pd.DataFrame) -> pd.DataFrame:

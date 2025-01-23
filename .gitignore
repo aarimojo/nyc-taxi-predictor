@@ -45,3 +45,5 @@ ENV/
 
 # Docker
 .docker/ 
+
+.DS_Store

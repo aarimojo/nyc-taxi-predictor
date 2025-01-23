@@ -110,10 +110,7 @@ class DataLoader:
 
         # Additional preprocessing
         if "pickup_datetime" in df.columns and "dropoff_datetime" in df.columns:
-<<<<<<< HEAD
-=======
             print("Processing pickup and dropoff datetimes")
->>>>>>> origin/EDAMH
             df["pickup_datetime"] = pd.to_datetime(df["pickup_datetime"], errors="coerce")
             df["dropoff_datetime"] = pd.to_datetime(df["dropoff_datetime"], errors="coerce")
 
@@ -126,13 +123,6 @@ class DataLoader:
             ).dt.total_seconds() / 60
             df = df[df["trip_duration"] > 0]  # Remove invalid durations
 
-<<<<<<< HEAD
-        df = self.remove_bad_date_data(df)
-        df = self._calculate_trip_duration(df)
-        df = self.remove_bad_trip_duration(df)
-        df = self.remove_bad_trip_distance(df)
-        df = self.join_vs_taxi_zones(df)
-=======
         print("Removing bad date data")
         df = self.remove_bad_date_data(df)
         print("Calculating trip duration")
@@ -154,13 +144,10 @@ class DataLoader:
         #finally
         print("Dropping extra columns")
         df = self._drop_extra_columns(df)
->>>>>>> origin/EDAMH
 
         # Save preprocessed data
         self.save_processed_data(df)
 
-<<<<<<< HEAD
-=======
     def _add_day_of_week(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add day of week to the dataset."""
         df["day_of_week_pu"] = df["tpep_pickup_datetime"].dt.dayofweek
@@ -179,7 +166,6 @@ class DataLoader:
         df["time_of_day_do"] = df["hour_of_day_do"].apply(lambda x: "morning" if 6 <= x < 12 else "afternoon" if 12 <= x < 18 else "evening" if 18 <= x < 21 else "night")
         return df
 
->>>>>>> origin/EDAMH
     def _calculate_trip_duration(self, df: pd.DataFrame) -> pd.DataFrame:
         """Calculate trip duration in minutes."""
         df["trip_duration"] = (df["tpep_dropoff_datetime"] - df["tpep_pickup_datetime"]).dt.total_seconds() / 60
@@ -199,8 +185,6 @@ class DataLoader:
     def remove_bad_trip_distance(self, df: pd.DataFrame) -> pd.DataFrame:
         """Remove data with invalid trip distance."""
         df = df[df["trip_distance"] > 0]
-<<<<<<< HEAD
-=======
         df = df[df["trip_distance"] < 100]
         return df
     
@@ -216,16 +200,11 @@ class DataLoader:
         df = df[df["DOLocationID"] != 265]
         df = df[df["PULocationID"] != 264]
         df = df[df["PULocationID"] != 265]
->>>>>>> origin/EDAMH
         return df
 
     def join_vs_taxi_zones(self, df: pd.DataFrame) -> pd.DataFrame:
         """Join the dataset with the taxi zones dataset."""
         taxi_zones = pd.read_csv("data/taxi_zones.csv")
-<<<<<<< HEAD
-        df = df.merge(taxi_zones, left_on="PULocationID", right_on="LocationID", how="left", suffixes=("_pu", "_pu_zone"))
-        df = df.merge(taxi_zones, left_on="DOLocationID", right_on="LocationID", how="left", suffixes=("_do", "_do_zone"))
-=======
         df = df.merge(taxi_zones, left_on="PULocationID", right_on="LocationID", how="left")
         df = df.merge(taxi_zones, left_on="DOLocationID", right_on="LocationID", how="left", suffixes=("_pu", "_do"))
         return df
@@ -233,7 +212,6 @@ class DataLoader:
     def _drop_extra_columns(self, df: pd.DataFrame) -> pd.DataFrame:
         """Drop extra columns."""
         df = df.drop(columns=["LocationID_pu", "LocationID_do"])
->>>>>>> origin/EDAMH
         return df
     
 if __name__ == "__main__":

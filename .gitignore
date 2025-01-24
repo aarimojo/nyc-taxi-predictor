@@ -42,6 +42,7 @@ data/processed/*
 venv/
 ENV/
 *venv
+nyc-venv2
 
 # Docker
 .docker/ 

@@ -47,3 +47,5 @@ ENV/
 .docker/ 
 
 .DS_Store
+
+.streamlit/secrets.toml

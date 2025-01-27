@@ -6,8 +6,8 @@ import concurrent.futures
 import argparse
 
 # Create data directories if they don't exist
-RAW_DATA_DIR = Path('/app/data/raw')
-PROCESSED_DATA_DIR = Path('/app/data/processed')
+RAW_DATA_DIR = Path('./data/raw')
+PROCESSED_DATA_DIR = Path('./data/processed')
 RAW_DATA_DIR.mkdir(parents=True, exist_ok=True)
 PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
 

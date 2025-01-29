@@ -29,6 +29,7 @@ class DataLoader:
         output_path = Path(self.output_path)
         output_path.mkdir(parents=True, exist_ok=True)
 
+
         # Construct base filename
         base_filename = f"{self.taxi_type}_processed"
         if self.year:

@@ -43,9 +43,18 @@ def main():
     st.title("🚕 NYC Taxi Predictor")
     st.markdown("### Interface Demo")
     
+    # Initialize Google Maps API
+    api_key = init_google_maps()
+    
     # datos de ejemplo
     df = generate_sample_data()
+
+    if 'pickup_address' not in st.session_state:
+        st.session_state.pickup_address = "Times Square, NY"
+    if 'dropoff_address' not in st.session_state:
+        st.session_state.dropoff_address = "Central Park, NY"
     
+
     tab1, tab2, tab3 = st.tabs(["Prediction","Data Analysis", "Statistics"])
     
     with tab1:
@@ -56,16 +65,26 @@ def main():
         with col1:
             # Prediction form
             st.subheader("Trip Details")
-            pickup_address = st.text_input("Pickup Address", "Times Square, NY")
-            dropoff_address = st.text_input("Destination Address", "Central Park, NY")
+            pickup_address = st.text_input(
+                "Pickup Address", 
+                value=st.session_state.pickup_address,
+                key="pickup_input",
+                on_change=update_pickup_address
+            )
+            
+            dropoff_address = st.text_input(
+                "Destination Address", 
+                value=st.session_state.dropoff_address,
+                key="dropoff_input", 
+                on_change=update_dropoff_address
+            )
+
 
             pickup_time = st.time_input("Pickup Time")
             pickup_date = st.date_input("Pickup Date")
 
             passengers = st.number_input("Number of Passengers", 1, 6, 1)
 
-        # Initialize Google Maps API
-        api_key = init_google_maps()
 
         if st.button("Calculate Prediction", type="primary"):
             if api_key:
@@ -173,6 +192,14 @@ def main():
                 columns=['Rates', 'Travel', 'Waiting Time']
             )
         )
+
+def update_pickup_address():
+    """Update pickup address in session state"""
+    st.session_state.pickup_address = st.session_state.pickup_input
+
+def update_dropoff_address():
+    """Update dropoff address in session state"""
+    st.session_state.dropoff_address = st.session_state.dropoff_input   
     
     # Footer
     st.markdown("---")
@@ -181,132 +208,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-# api_response = {
-#     "geocoded_waypoints": [
-#         {"geocoder_status": "OK", "partial_match": True, "place_id": "ChIJmQJIxlVYwokRLgeuocVOGVU", "types": ["establishment", "point_of_interest", "tourist_attraction"]},
-#         {"geocoder_status": "OK", "partial_match": True, "place_id": "ChIJ4zGFAZpYwokRGUGph3Mf37k", "types": ["establishment", "park", "point_of_interest", "tourist_attraction"]}
-#     ],
-#     "routes": [
-#         {
-#             "overview_polyline": {"points": "wywwF~eqbML?{CdJm@jBo@c@iAu@wA}@aDuBcC{AyByAmKaHaKwGOKMGS[BI@I@[G_@OWSS_@OI?M@"},
-#             "legs": [
-#                 {
-#                     "steps": [
-#                         {"polyline": {"points": "wywwF~eqbMDAF@"}},
-#                         {"polyline": {"points": "iywwF~eqbMuBlGe@vAm@jB"}},
-#                         {"polyline": {"points": "s_xwFptqbMo@c@]Uk@_@]SGE_@WQKc@YUOeAs@a@Wc@YECi@]o@_@SOUOIGeAq@aAq@WOa@W}ByAYSu@g@m@_@UQqAy@QM[SmAy@_@UmAy@w@g@MIGEGEMGS["}},
-#                         {"polyline": {"points": "gmywFbspbM@C@E?E@C?E@E?E?IAA?ICKAGAECECGECCEEECCECCCCACACACACACAC?A?A?A?A?A?A?C?A?C@A?"}}
-#                     ]
-#                 }
-#             ]
-#         }
-#     ]
-# }
-
-# plot_route(api_response)
-
-
-# src_path = str(Path(__file__).parent.parent)
-# sys.path.append(src_path)
-
-# from ..data.data_loader import load_data
-# from ..models.predictor import predict
-
-# def set_page_config():
-#     """Config inicial de la pag"""
-#     st.set_page_config(
-#         page_title="NYC Taxi Predictor",
-#         page_icon="🚕",
-#         layout="wide",
-#         initial_sidebar_state="expanded"
-#     )
-
-# def sidebar_filters():
-#     """Sidebar filters"""
-#     st.sidebar.header("Filters")
-
-#     date_range = st.sidebar.date_input(
-#         "Select date range",
-#         value=[pd.to_datetime('2024-01-01'), pd.to_datetime('2024-01-31')]
-#     )
-
-#     passenger_count = st.sidebar_slider(
-#         "Passenger numbers",
-#         min_value = 1,
-#         max_value = 6,
-#         value = 1
-#     )
-
-#     return date_range, passenger_count
-
-
-# def main_content():
-#     """Main content of the application"""
-#     st.title("🚕 NYC Taxi Fare & Duration Predictor")
-
-#     tab1, tab2, tab3 = st.tabs(['Predict', 'Data Analysis', 'Statistics'])
-
-#     with tab1:
-#         st.header("Rate and Duration Prediction")
-#         col1, col2 = st.columns(2)
-
-#         with col1:
-#             pickup_location = st.text_input("Pickup location")
-#             dropoff_location = st.text_input("Dropoff location")
-#             pickup_datetime = st.datetime_input("Pickup Date & Time")
-
-#             if st.button("Calculate Prediction"):
-#                 # Your prediction functions would go here
-#                 st.success("Prediction calculated!")
-#                 # Show results
-#                 st.metric("Estimated Fare", "$25.50")
-#                 st.metric("Estimated Duration", "15 min")
-
-#         with col2:
-#             # Here should be appear the map
-#             st.write("Map Route")
-#             # Placeholder for the map
-#             st.empty()
-
-#     with tab2:
-#         st.header("Analysis of Historical Data")
-#         try:
-#             df = load_data()
-
-#             # show general metrics
-#             col1, col2, col3 = st.columns(3)
-#             with col1:
-#                 st.metric("Total Trips", f"{len(df):,}")
-#             with col2:
-#                 st.metric("Average Rate", f"${df['fare_amount'].mean():.2f}")
-#             with col3:
-#                 st.metric("Average Duration", f"{df['trip_duration'].mean():.0f} min")
-
-#             # visualizations
-#             st.subheader("Tariff Distribution")
-#             # TBD --> here should be stay charts and graphs
-
-#         except Exception as e:
-#             st.error(f"Error loading data: {str(e)}")
-
-#     with tab3:
-#         st.header("Real-Time Statistics")
-#         # TBD --> here we could show updated statistics
-#         st.write("Statistics in development...")
-
-# def main():
-#     """Main function of the application"""
-#     set_page_config()
-    
-#     # Sidebar
-#     date_range, passenger_count = sidebar_filters()
-    
-#     # Main content
-#     main_content()
-    
-#     # Footer
-#     st.markdown("---")
-#     st.markdown("Developed for the NYC Taxi Prediction project")
-
-# if __name__ == "__main__":
-#     main()

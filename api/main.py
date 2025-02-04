@@ -1,11 +1,28 @@
+import sys
+import os
+from pathlib import Path
+
+
+root_dir = Path(__file__).resolve().parent.parent.parent
+sys.path.append(str(root_dir))
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routers import predictions
+from api.routers.predictions import router as predict_router
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # podemos restringirlo a la sig ruta ['http://localhost:8501']
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Include routers
-app.include_router(predictions.router, prefix="/api/v1")
+app.include_router(predict_router, prefix="/api/v1")
 
 @app.get("/")
 async def root():
@@ -14,3 +31,4 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"} 
+

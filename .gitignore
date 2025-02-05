@@ -54,3 +54,5 @@ nyc-venv2
 .DS_Store
 
 .streamlit/secrets.toml
+
+/logs

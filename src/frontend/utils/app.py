@@ -3,8 +3,11 @@ import requests
 import folium
 from streamlit_folium import folium_static
 from frontend.components.maps import get_route_from_google
+from utils.logger import Logger
 
 API_URL = "http://127.0.0.1:8000/api/v1/predict"  # cambiar si el backend esta en otro host
+
+logger = Logger.setup()
 
 st.title("NYC Taxi Fare Predictor")
 

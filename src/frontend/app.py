@@ -1,4 +1,7 @@
 import streamlit as st
+from utils.logger import Logger
+
+logger = Logger.setup()
 
 def set_page_config():
     """Initial page setup"""
@@ -38,25 +41,40 @@ def generate_sample_data(n_samples=1000):
 
 
 def main():
-    set_page_config()
-    
-    st.title("🚕 NYC Taxi Predictor")
-    st.markdown("### Interface Demo")
-    
-    # Initialize Google Maps API
-    api_key = init_google_maps()
+    try:
+        set_page_config()
+        logger.info("Starting NYC Taxi Predictor frontend application")
+        
+        st.title("🚕 NYC Taxi Predictor")
+        st.markdown("### Interface Demo")
+        
+        # Initialize Google Maps API
+        api_key = init_google_maps()
+        if not api_key:
+            logger.error("Failed to initialize Google Maps API - missing API key")
+            st.error("Google Maps API key not configured")
+            return
+        
+        logger.info("Successfully initialized Google Maps API")
+
+    except Exception as e:
+        logger.error(f"Unexpected error in main application: {str(e)}", exc_info=True)
+        st.error("An unexpected error occurred. Please try again later.")
     
     # datos de ejemplo
     df = generate_sample_data()
 
     if 'pickup_address' not in st.session_state:
+        logger.info("Setting default pickup address")
         st.session_state.pickup_address = "Times Square, NY"
     if 'dropoff_address' not in st.session_state:
+        logger.info("Setting default dropoff address")
         st.session_state.dropoff_address = "Central Park, NY"
 
     tab1, tab2, tab3 = st.tabs(["Prediction","Data Analysis", "Statistics"])
     
     with tab1:
+        logger.info("Displaying prediction tab")
         st.header("Rate and Duration Prediction")
         
         col1, col2 = st.columns(2)
@@ -70,6 +88,7 @@ def main():
                 key="pickup_input",
                 on_change=update_pickup_address
             )
+            logger.info(f"Pickup address: {pickup_address}")
             
             dropoff_address = st.text_input(
                 "Destination Address", 
@@ -77,13 +96,17 @@ def main():
                 key="dropoff_input", 
                 on_change=update_dropoff_address
             )
-
+            logger.info(f"Dropoff address: {dropoff_address}")
+            
             pickup_time = st.time_input("Pickup Time")
+            logger.info(f"Pickup time: {pickup_time}")
             pickup_date = st.date_input("Pickup Date")
+            logger.info(f"Pickup date: {pickup_date}")
 
             passengers = st.number_input("Number of Passengers", 1, 6, 1)
-
+            logger.info(f"Number of passengers: {passengers}")
         if st.button("Calculate Prediction", type="primary"):
+            logger.info("calculating prediction")
             if api_key:
                 # Get route information and display map
                 with col2:
@@ -93,23 +116,28 @@ def main():
                         dropoff_address=dropoff_address,
                         api_key=api_key
                     )
-                
+                    logger.info(f"Route information: duration: {duration}, distance: {distance}")
                 if duration and distance:
                     # Simulate the prediction using the real route data
                     col_pred1, col_pred2 = st.columns(2)
-                    
+                    logger.info(f"Columns: {col_pred1}, {col_pred2}")
                     with col_pred1: 
                         # Calculate estimated rate based on distance
                         estimated_rate = distance * 2.5  # Example rate calculation
                         st.metric("Estimated Rate", f"${estimated_rate:.2f}")
                         st.metric("Distance", f"{distance:.1f} km")
+                        logger.info(f"Estimated rate: {estimated_rate}")
+                        logger.info(f"Estimated Distance: {distance}")
                     with col_pred2:
                         st.metric("Estimated Duration", f"{duration:.0f} min")
                         # Calculate arrival time
                         arrival_time = (datetime.combine(pickup_date, pickup_time) + 
                                       timedelta(minutes=duration)).strftime("%I:%M %p")
                         st.metric("Estimated Arrival", arrival_time)
+                        logger.info(f"Estimated Duration: {duration}")
+                        logger.info(f"Estimated Arrival: {arrival_time}")
             else:
+                logger.error("Google Maps API key not configured")
                 st.error("Please configure the Google Maps API key to use this feature")
         else:
             # Show default map view when no calculation is requested
@@ -117,12 +145,15 @@ def main():
                 st.subheader("Travel Route")
                 if api_key:
                     # Show initial route with default addresses
+                    logger.info("Showing initial route with default addresses")
                     create_route_map(
                         pickup_address="Times Square, NY",
                         dropoff_address="Central Park, NY",
                         api_key=api_key
                     )
+                    logger.info("Route created successfully")
                 else:
+                    logger.warning("Google Maps API key not configured. Showing static map.")
                     st.warning("Google Maps API key not configured. Showing static map.")
                     # Fallback to static map
                     create_pickup_dropoff_map(

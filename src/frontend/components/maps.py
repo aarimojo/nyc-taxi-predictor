@@ -15,17 +15,24 @@ import json
 
 
 def get_coordinates(address, api_key):
-    """
-    Convert address to latitude and longitude using Google Geocoding API.
-    """
+    """Convert address to latitude and longitude using Google Geocoding API."""
     url = f"https://maps.googleapis.com/maps/api/geocode/json?address={address}&key={api_key}"
-    response = requests.get(url)
-    response.raise_for_status()
-    data = response.json()
-    if not data.get('results'):
-        raise Exception(f"No se encontraron resultados para la dirección: {address}")
-    location = data['results'][0]['geometry']['location']
-    return location['lat'], location['lng']
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+
+        if 'results' not in data or not data['results']:
+            st.error(f"No se encontraron coordenadas para la dirección: {address}")
+            return None, None
+
+        location = data['results'][0]['geometry']['location']
+        return location['lat'], location['lng']
+
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error en la solicitud de geocodificación: {e}")
+        return None, None
 
 def get_route_from_google(pickup_address, dropoff_address, api_key):
     """
@@ -34,7 +41,10 @@ def get_route_from_google(pickup_address, dropoff_address, api_key):
     # Convert addresses to coordinates
     pickup_lat, pickup_lon = get_coordinates(pickup_address, api_key)
     dropoff_lat, dropoff_lon = get_coordinates(dropoff_address, api_key)
-    
+
+    if None in (pickup_lat, pickup_lon, dropoff_lat, dropoff_lon):
+        return None, None, None
+ 
     # Define the API endpoint and headers
     base_url = "https://routes.googleapis.com/directions/v2:computeRoutes"
     headers = {
@@ -72,7 +82,13 @@ def get_route_from_google(pickup_address, dropoff_address, api_key):
     try:
         response = requests.post(base_url, headers=headers, json=body)
         response.raise_for_status()
-        return response.json()
+        route_data = response.json()
+
+        distance_meters = route_data['routes'][0]['distanceMeters']
+        distance_km = round(distance_meters / 1000, 2)
+
+        return route_data, (pickup_lat, pickup_lon), (dropoff_lat, dropoff_lon), distance_km
+
     except requests.exceptions.RequestException as e:
         error_message = e.response.text if e.response else str(e)
         raise Exception(f"Error calling Google Routes API: {error_message}")
@@ -129,7 +145,7 @@ def create_route_map(pickup_address, dropoff_address, api_key):
             ).add_to(m)
         
         # Calcular duración y distancia
-        duration = float(route['duration'][:-1])  # Remove 's' from duration string
+        duration = route['duration'] / 60  # Remove 's' from duration string
         distance = float(route['distanceMeters']) / 1000  # Convert to km
         
         # Mostrar el mapa
@@ -151,13 +167,14 @@ def init_google_maps():
     Initialize Google Maps settings
     """
     # Get API key from environment variable or Streamlit secrets
-    api_key = os.getenv('GOOGLE_MAPS_API_KEY') or st.secrets.get("GOOGLE_MAPS_API_KEY")
-    
-    if not api_key:
-        st.error("Google Maps API key not found. Please set GOOGLE_MAPS_API_KEY in environment variables or Streamlit secrets.")
+    try:
+        api_key = os.getenv('GOOGLE_MAPS_API_KEY') or st.secrets["GOOGLE_MAPS_API_KEY"]
+        if not api_key:
+            raise ValueError("API key no encontrada")
+        return api_key
+    except Exception as e:
+        st.error(f"Error al obtener API key: {e}")
         return None
-    
-    return api_key
 
 def create_pickup_dropoff_map(pickup_lat, pickup_lon, dropoff_lat, dropoff_lon):
     """

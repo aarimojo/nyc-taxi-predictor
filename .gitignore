@@ -23,6 +23,8 @@ wheels/
 AnyoneAI - Sprint Project 01.ipynb
 
 
+# Streamlit Api_key
+.streamlit/secrets.toml
 
 # Jupyter Notebook
 .ipynb_checkpoints

@@ -1,35 +1,62 @@
-version: '3'
+version: '3.8'
 
 services:
-  notebook:
-    build: .
+  # notebook:
+  #   build: .
+  #   ports:
+  #     - "8888:8888"
+  #   volumes:
+  #     - .:/app
+  #   environment:
+  #     - JUPYTER_TOKEN=taxi
+
+  # data:
+  #   build: 
+  #     context: ./data
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - .:/app
+  #   working_dir: /app
+  #   command: ["python", "data/download_data.py", "--years", "2022,2023,2024"]
+
+  redis:
+    image: redis:latest
     ports:
-      - "8888:8888"
-    volumes:
-      - .:/app
+      - "6379:6379"
+    networks:
+      - taxi-network
+
+  model:
+    build:
+      context: ./model
+      dockerfile: Dockerfile
     environment:
-      - JUPYTER_TOKEN=taxi
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+    networks:
+      - taxi-network
 
   api:
-    build: .
+    build:
+      context: ./api
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    volumes:
-      - .:/app
-    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
     environment:
-      - MODEL_PATH=/app/models/latest
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
-      - notebook 
+      - redis
+      - model
+    networks:
+      - taxi-network
 
-  data:
-    build: 
-      context: ./data
-      dockerfile: Dockerfile
-    volumes:
-      - .:/app
-    working_dir: /app
-    command: ["python", "data/download_data.py", "--years", "2022,2023,2024"]
+networks:
+  taxi-network:
+    driver: bridge
+
 
   # volumes:
   #   nyc_taxi_data:

@@ -17,7 +17,6 @@ from pathlib import Path
 import sys
 import numpy as np
 from datetime import datetime, timedelta
-from route_map import plot_route 
 from components.charts import plot_fare_distribution, create_metrics_dashboard, plot_trips_by_hour
 from components.maps import create_pickup_dropoff_map, create_route_map, init_google_maps, create_heatmap
 

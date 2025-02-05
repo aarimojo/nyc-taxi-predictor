@@ -1,5 +1,4 @@
 # src/frontend/components/maps.py
-import googlemaps
 from googlemaps import convert
 
 import streamlit as st
@@ -12,7 +11,6 @@ from datetime import datetime
 import polyline
 import os
 from utils.logger import Logger
-import json
 
 logger = Logger.get_logger('components.maps')
 
@@ -25,7 +23,7 @@ def get_coordinates(address, api_key):
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
-        logger.info(f"Geocoding response: {data}")
+        # logger.info(f"Geocoding response: {data}")
         if 'results' not in data or not data['results']:
             logger.error(f"No coordinates found for address: {address}")
             st.error(f"No se encontraron coordenadas para la dirección: {address}")

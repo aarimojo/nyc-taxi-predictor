@@ -53,6 +53,22 @@ services:
     networks:
       - taxi-network
 
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://api:8000
+    volumes:
+      - ./src/frontend:/app
+      - ./.streamlit:/app/.streamlit
+    depends_on:
+      - api
+    networks:
+      - taxi-network
+
 networks:
   taxi-network:
     driver: bridge

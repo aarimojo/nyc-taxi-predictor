@@ -1,5 +1,6 @@
 import streamlit as st
 from utils.logger import Logger
+from utils.config import API_URL
 
 logger = Logger.setup()
 

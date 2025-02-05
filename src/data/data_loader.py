@@ -65,9 +65,11 @@ class DataLoader:
         return df, summary_stats, missing_values_report, duplicate_count
 
     def visualize_data(self, df):
-        """Visualize distributions of key features in the dataset."""
-        sns.histplot(df["trip_distance"], kde=True, bins=30)
-        plt.title("Distribution of Trip Distance")
-        plt.xlabel("Trip Distance (miles)")
-        plt.ylabel("Frequency")
-        plt.show()
+        """Visualize distributions of all numeric columns in the dataset."""
+        numeric_columns = df.select_dtypes(include=["number"]).columns
+        for column in numeric_columns:
+            sns.histplot(df[column], kde=True, bins=30)
+            plt.title(f"Distribution of {column}")
+            plt.xlabel(column)
+            plt.ylabel("Frequency")
+            plt.show()

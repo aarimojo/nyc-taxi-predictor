@@ -53,7 +53,6 @@ def main():
         st.session_state.pickup_address = "Times Square, NY"
     if 'dropoff_address' not in st.session_state:
         st.session_state.dropoff_address = "Central Park, NY"
-    
 
     tab1, tab2, tab3 = st.tabs(["Prediction","Data Analysis", "Statistics"])
     
@@ -79,12 +78,10 @@ def main():
                 on_change=update_dropoff_address
             )
 
-
             pickup_time = st.time_input("Pickup Time")
             pickup_date = st.date_input("Pickup Date")
 
             passengers = st.number_input("Number of Passengers", 1, 6, 1)
-
 
         if st.button("Calculate Prediction", type="primary"):
             if api_key:
@@ -207,4 +204,3 @@ def update_dropoff_address():
 
 if __name__ == "__main__":
     main()
-

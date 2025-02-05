@@ -37,6 +37,8 @@ data/raw/*
 data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+*.csv
+*.geojson
 
 # Environment
 .env
@@ -44,6 +46,7 @@ data/processed/*
 venv/
 ENV/
 *venv
+nyc-venv2
 
 # Docker
 .docker/ 

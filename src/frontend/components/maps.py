@@ -44,7 +44,7 @@ def get_route_from_google(pickup_address, dropoff_address, api_key):
 
     if None in (pickup_lat, pickup_lon, dropoff_lat, dropoff_lon):
         return None, None, None
-       
+ 
     # Define the API endpoint and headers
     base_url = "https://routes.googleapis.com/directions/v2:computeRoutes"
     headers = {
@@ -175,7 +175,7 @@ def init_google_maps():
     except Exception as e:
         st.error(f"Error al obtener API key: {e}")
         return None
-    
+
 def create_pickup_dropoff_map(pickup_lat, pickup_lon, dropoff_lat, dropoff_lon):
     """
     Create a map with pickup and dropoff markers and a line connecting them

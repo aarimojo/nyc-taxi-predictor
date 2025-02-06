@@ -34,7 +34,7 @@ if __name__ == "__main__":
     lon = -73.9921  # Longitud de Borough Park
 
     # Ruta al archivo GeoJSON
-    geojson_path = ("./NTA.geo.json")
+    geojson_path = ("./nycneighborhoods_converted.geo.json")
 
     # Llamada a la función
     zone_name = get_zone_from_coordinates(lat, lon, geojson_path)
@@ -51,6 +51,6 @@ if __name__ == "__main__":
     # distance_miles = calculate_distance_in_miles((start_lat, start_lon), (end_lat, end_lon))
 
     # Mostrar resultados
-    print(f"Zona de origen: {start_zone}")
-    print(f"Zona de destino: {end_zone}")
+    print(f"\n\nZona de origen: \n{start_zone}")
+    print(f"\n\nZona de destino: \n{end_zone}")
     # print(f"Distancia en millas: {distance_miles:.2f}")

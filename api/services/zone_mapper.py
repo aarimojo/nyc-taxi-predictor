@@ -24,7 +24,7 @@ class ZoneMapper:
         """Load GeoJSON and taxi zone data."""
         try:
             # Load GeoJSON data
-            geojson_path = Path(__file__).parent.parent / 'data' / 'NTA.geo.json'
+            geojson_path = Path(__file__).parent.parent / 'data' / 'nycneighborhoods_converted.geo.json'
             self.zones_gdf = gpd.read_file(str(geojson_path))
             
             # Load taxi zones mapping
@@ -55,17 +55,16 @@ class ZoneMapper:
             for _, zone in self.zones_gdf.iterrows():
                 if point.within(zone['geometry']):
                     # Get corresponding taxi zone info
-                    zone_name = zone['NTAName']
-                    logger.info(f"Zone name: {zone_name}")
-                    taxi_zone = self.taxi_zones[
-                        self.taxi_zones['Zone'].str.contains(zone_name, case=False, na=False)
-                    ].iloc[0]
-                    logger.info(f"Taxi zone: {taxi_zone}")                    
+                    zone_name = zone['zone_name']
+                    borough = zone['borough']
+                    location_id = zone['zone_id']
+                    service_zone = zone['service_zone']
+                    logger.info(f"Zone: {zone}")                  
                     return {
-                        'location_id': int(taxi_zone['LocationID']),
-                        'borough': taxi_zone['Borough'],
-                        'zone': taxi_zone['Zone'],
-                        'service_zone': taxi_zone['service_zone']
+                        'location_id': int(location_id),
+                        'borough': borough,
+                        'zone': zone_name,
+                        'service_zone': service_zone
                     }
             
             logger.warning(f"No zone found for coordinates: {lat}, {lon}")

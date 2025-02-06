@@ -1,6 +1,6 @@
 import geopandas as gpd
 from shapely.geometry import Point
-from geopy.distance import geodesic
+#from geopy.distance import geodesic
 
 def get_zone_from_coordinates(lat, lon, geojson_path):
     """
@@ -23,33 +23,18 @@ def get_zone_from_coordinates(lat, lon, geojson_path):
     # Buscar la zona que contiene el punto
     for _, zone in zones.iterrows():
         if point.within(zone['geometry']):
-            return zone['ntaname']  # Aquí usamos 'ntaname' para obtener el nombre de la zona
+            return zone
     
     return "Zona no encontrada"
 
-def calculate_distance_in_miles(start_coords, end_coords):
-    """
-    Calcula la distancia en millas entre dos coordenadas geográficas.
-    
-    Args:
-        start_coords (tuple): Coordenadas (lat, lon) del punto de origen.
-        end_coords (tuple): Coordenadas (lat, lon) del punto de destino.
-    
-    Returns:
-        float: Distancia en millas.
-    """
-    # Calcular la distancia en kilómetros y convertirla a millas
-    distance_km = geodesic(start_coords, end_coords).km
-    distance_miles = distance_km * 0.621371  # Convertir kilómetros a millas
-    return distance_miles
-
-if __name__ =="main":
+if __name__ == "__main__":
+    print("init")
     # Coordenadas de ejemplo
     lat = 40.6350  # Latitud de Borough Park
     lon = -73.9921  # Longitud de Borough Park
 
     # Ruta al archivo GeoJSON
-    geojson_path = ("../data/NTA map.geojson")
+    geojson_path = ("./nycneighborhoods_converted.geo.json")
 
     # Llamada a la función
     zone_name = get_zone_from_coordinates(lat, lon, geojson_path)
@@ -63,9 +48,9 @@ if __name__ =="main":
     end_zone = get_zone_from_coordinates(end_lat, end_lon, geojson_path)
 
     # Calcular la distancia en millas
-    distance_miles = calculate_distance_in_miles((start_lat, start_lon), (end_lat, end_lon))
+    # distance_miles = calculate_distance_in_miles((start_lat, start_lon), (end_lat, end_lon))
 
     # Mostrar resultados
-    print(f"Zona de origen: {start_zone}")
-    print(f"Zona de destino: {end_zone}")
-    print(f"Distancia en millas: {distance_miles:.2f}")
+    print(f"\n\nZona de origen: \n{start_zone}")
+    print(f"\n\nZona de destino: \n{end_zone}")
+    # print(f"Distancia en millas: {distance_miles:.2f}")

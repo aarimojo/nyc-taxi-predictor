@@ -1,47 +1,66 @@
-from fastapi import APIRouter, HTTPException, Query
-from api.schemas.prediction import TripRequest, TripPrediction
-from src.models.predictor import TaxiPredictor
-from src.models.predictor import DummyTaxiPredictor  
+from fastapi import APIRouter, HTTPException
+from datetime import datetime
+from typing import Dict, Any
+from prediction_client import PredictionClient
+from schemas.prediction import TripRequest, TripPrediction
+from services.zone_mapper import ZoneMapper
+from logger import Logger
 
-router = APIRouter()
-predictor = TaxiPredictor()
+# Initialize logger
+logger = Logger.get_logger('router.predictions')
 
+# Initialize router
+router = APIRouter(
+    tags=["predictions"],
+    responses={404: {"description": "Not found"}},
+)
 
-@router.get('/predict')
-def predict_trip(
-    pickup_latitude: float = Query(..., ge=-90, le=90),
-    pickup_longitude: float = Query(..., ge=-180, le=180),
-    dropoff_latitude: float = Query(..., ge=-90, le=90),
-    dropoff_longitude: float = Query(..., ge=-180, le=180),
-    passengers: int = Query(..., ge=1, le=6)
-):
+# Initialize prediction client
+prediction_client = PredictionClient()
+zone_mapper = ZoneMapper()
+@router.post("", response_model=TripPrediction)
+async def create_prediction(data: TripRequest):
     """
-    Predict the trip duration and fare amount.
+    Create a new prediction for taxi trip details.
+    
+    Returns predicted trip duration, fare amount, and other costs.
     """
+    logger.info("Prediction endpoint called")
+    logger.debug(f"Received request data: {data}")
     
-    duration, fare = predictor.predict(
-        pickup_latitude=pickup_latitude,
-        pickup_longitude=pickup_longitude,
-        dropoff_latitude=dropoff_latitude,
-        dropoff_longitude=dropoff_longitude,
-        passengers=passengers
-    )
-    
-    return {
-        "duration": float(duration),
-        "fare": float(fare)
-    }
-
-    
-@router.post("/predict")
-async def predict(input_data: dict):
     try:
-        predictor = TaxiPredictor() 
-        duration = predictor.predict_duration(input_data)
-        fare = predictor.predict_fare(input_data)
-        return {
-            "duration": round(duration, 2),
-            "fare": round(fare, 2)
+        pickup_coords = (data.pickup_location.latitude, data.pickup_location.longitude)
+        dropoff_coords = (data.dropoff_location.latitude, data.dropoff_location.longitude)
+
+        pu_location_id, do_location_id = zone_mapper.get_location_ids(
+            pickup_coords, dropoff_coords
+        )
+
+        if not pu_location_id or not do_location_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Could not map coordinates to taxi zones"
+            )
+
+        model_request = {
+            "PULocationID": pu_location_id,
+            "DOLocationID": do_location_id,
+            "store_and_fwd_flag": "N",
+            "trip_distance": data.trip_distance,
+            "tpep_pickup_datetime": data.pickup_datetime
         }
+
+        # Get prediction from model service
+        prediction = prediction_client.get_prediction(model_request)
+        
+        logger.info("Successfully processed prediction request")
+        logger.debug(f"Prediction result: {prediction}")
+
+        return TripPrediction(**prediction)
+
+    except HTTPException as e:
+        logger.error(f"HTTP error during prediction: {str(e)}")
+        raise e
     except Exception as e:
-        return {"error": str(e)}   
+        logger.error(f"Unexpected error during prediction: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

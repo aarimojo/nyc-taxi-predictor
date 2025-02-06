@@ -2,6 +2,8 @@ from fastapi import APIRouter, HTTPException
 from datetime import datetime
 from typing import Dict, Any
 from prediction_client import PredictionClient
+from schemas.prediction import TripRequest, TripPrediction
+from services.zone_mapper import ZoneMapper
 from logger import Logger
 
 # Initialize logger
@@ -15,9 +17,9 @@ router = APIRouter(
 
 # Initialize prediction client
 prediction_client = PredictionClient()
-
-@router.post("", response_model=Dict[str, float])
-async def create_prediction(data: Dict[str, Any]):
+zone_mapper = ZoneMapper()
+@router.post("", response_model=TripPrediction)
+async def create_prediction(data: TripRequest):
     """
     Create a new prediction for taxi trip details.
     
@@ -27,23 +29,34 @@ async def create_prediction(data: Dict[str, Any]):
     logger.debug(f"Received request data: {data}")
     
     try:
-        # Convert string datetime to datetime object if needed
-        if isinstance(data.get('tpep_pickup_datetime'), str):
-            data['tpep_pickup_datetime'] = datetime.fromisoformat(data['tpep_pickup_datetime'])
+        pickup_coords = (data.pickup_location.latitude, data.pickup_location.longitude)
+        dropoff_coords = (data.dropoff_location.latitude, data.dropoff_location.longitude)
+
+        pu_location_id, do_location_id = zone_mapper.get_location_ids(
+            pickup_coords, dropoff_coords
+        )
+
+        if not pu_location_id or not do_location_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Could not map coordinates to taxi zones"
+            )
+
+        model_request = {
+            "PULocationID": pu_location_id,
+            "DOLocationID": do_location_id,
+            "store_and_fwd_flag": "N",
+            "trip_distance": data.trip_distance,
+            "tpep_pickup_datetime": data.pickup_datetime
+        }
 
         # Get prediction from model service
-        prediction = prediction_client.get_prediction(data)
+        prediction = prediction_client.get_prediction(model_request)
         
         logger.info("Successfully processed prediction request")
         logger.debug(f"Prediction result: {prediction}")
 
-        return {
-            "trip_duration": prediction["trip_duration"],
-            "fare_amount": prediction["fare_amount"],
-            "tolls_amount": prediction["tolls_amount"],
-            "congestion_surcharge": prediction["congestion_surcharge"],
-            "total_amount": prediction["total_amount"]
-        }
+        return TripPrediction(**prediction)
 
     except HTTPException as e:
         logger.error(f"HTTP error during prediction: {str(e)}")

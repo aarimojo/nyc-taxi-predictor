@@ -169,8 +169,9 @@ def create_route_map(pickup_address, dropoff_address, api_key):
         
         # Mostrar el mapa
         folium_static(m)
-        
-        return m, duration, distance
+        pickup_coords = { 'pickup_lat': pickup_lat, 'pickup_lon': pickup_lon }
+        dropoff_coords = { 'dropoff_lat': dropoff_lat, 'dropoff_lon': dropoff_lon }
+        return m, duration, distance, pickup_coords, dropoff_coords
             
     except Exception as e:
         logger.error(f"Error creating route map: {str(e)}, {e.__traceback__}")

@@ -15,8 +15,6 @@ A machine learning system that predicts taxi trip duration and costs in New York
 nyc-taxi-predictor/
 ├── .gitignore
 ├── README.md
-├── requirements.txt
-├── Dockerfile
 ├── docker-compose.yml
 ├── api/
 │   ├── __init__.py
@@ -24,29 +22,37 @@ nyc-taxi-predictor/
 │   ├── routers/
 │   │   ├── __init__.py
 │   │   └── predictions.py
-│   └── schemas/
-│       ├── __init__.py
-│       └── prediction.py
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   └── prediction.py
+│   └── services/
+│   │   ├── __init__.py
+│   │   └── zone_mapper.py
+│   └── data/
+│       └── nycneighborhoods_converted.geo.json
 ├── data/
 │   ├── raw/
 │   ├── processed/
+│   ├── geojson_coordinates_procesing.py
+│   ├── geojson_create_geojson_file.py
 │   └── download_data.py
 ├── notebooks/
 │   ├── 01_initial_data_exploration.ipynb
 │   └── 02_feature_engineering.ipynb
-├── src/
-│   ├── __init__.py
-│   ├── data/
-│   │   ├── __init__.py
-│   │   └── data_loader.py
-│   ├── features/
-│   │   ├── __init__.py
-│   │   └── feature_engineering.py
-│   └── models/
-│       ├── __init__.py
-│       └── predictor.py
-└── tests/
-    └── __init__.py 
+└── src/
+    └── frontend/
+        ├── components/
+        │   ├── __init__.py
+        │   ├── charts.py
+        │   └── maps.py
+        ├── utils/
+        │   ├── __init__.py
+        │   ├── api.py
+        │   ├── config.py
+        │   └── logger.py
+        ├── app.py
+        ├── Dockerfile
+        └── requirements.txt
 ```
 
 ## Data Source

@@ -10,6 +10,22 @@ A machine learning system that predicts taxi trip duration and costs in New York
 - Interactive Jupyter notebooks for data exploration
 - Docker support for easy deployment
 
+### Environment Files
+
+Before running the services, you need to create the following environment files:
+
+1. `api/.env` https://rapidapi.com/meteostat/api/meteostat:
+```
+RAPIDAPI_HOST=
+RAPIDAPI_KEY=
+```
+
+2. `data/.env` https://rapidapi.com/meteostat/api/meteostat:
+```
+key=your_weather_api_key
+host=your_weather_api_host
+```
+
 ## Project Structure
 ```
 nyc-taxi-predictor/
@@ -55,10 +71,6 @@ nyc-taxi-predictor/
         └── requirements.txt
 ```
 
-## Data Source
-
-This project uses the [NYC Taxi Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page) provided by the NYC Taxi & Limousine Commission (TLC).
-
 ## Installation
 
 ### Local Installation
@@ -69,14 +81,14 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-2. Install required packages:
+2. Install required packages for each service:
 ```bash
 pip install -r requirements.txt
 ```
 
 3. Download the initial dataset:
 ```bash
-python data/download_data.py
+python -m data.download_data.py --years 2022,2023,2024
 ```
 
 ### Using Docker
@@ -105,11 +117,11 @@ docker-compose up notebook
 # Run the API
 docker-compose up api
 
-# Download data
-docker-compose run data
+# Run the model
+docker-compose up model
 
-# Download specific years
-docker-compose run data --years 2023,2024
+# Run the frontend
+docker-compose up frontend
 ```
 
 ### Accessing Services
@@ -119,9 +131,9 @@ docker-compose run data --years 2023,2024
 - Token: taxi
 
 #### API
-- Main URL: http://localhost:8000
-- Documentation: http://localhost:8000/docs
-- Health check: http://localhost:8000/health
+- Frontend URL: http://localhost:8501
+- API URl: http://localhost:8000
+- Redis: http://localhost:6379
 
 ### Development Workflow
 
@@ -139,6 +151,32 @@ docker-compose down
 
 # Stop a specific service
 docker-compose stop notebook
+```
+
+## Data Source
+
+This project uses the [NYC Taxi Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page) provided by the NYC Taxi & Limousine Commission (TLC).
+
+### Initializing the data download and processing
+
+1. Download the taxi data:
+```bash
+python -m data.download_data --years 2023,2024
+```
+
+2. Process the downloaded data:
+```bash
+python -m data.process_data.py --year 2024 --month 01
+```
+or 
+```bash
+python -m data.process_data.py --month 01 --no-split
+```
+You can specify different years/months or process all data by omitting the year and month parameters.
+
+3. Start all services:
+```bash
+docker-compose up
 ```
 
 ## Contributing

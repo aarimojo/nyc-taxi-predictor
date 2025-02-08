@@ -33,9 +33,12 @@ class Predictor:
         self.local = local
         
         # Load models
-        self.fare_pipeline = load("xgb_model_fare_amount.pkl")
+        # self.fare_pipeline = load("xgb_model_fare_amount.pkl")
+        self.fare_pipeline = load("xgb_model_weather_bins_ohe_fare_amount.pkl")
         logger.info("Loaded fare pipeline")
-        self.duration_pipeline = load("xgb_model_trip_duration.pkl")
+
+        # self.duration_pipeline = load("xgb_model_trip_duration.pkl")
+        self.duration_pipeline = load("xgb_model_weather_bins_ohe_trip_duration.pkl")
         logger.info("Loaded duration pipeline")
 
         # Initialize Redis connection
@@ -171,6 +174,10 @@ class Predictor:
     def predict(self, data: Dict[str, Any]) -> TripPrediction:
         """Make predictions and return validated TripPrediction."""
         logger.info("predicting")
+        if 'weather_data' in data:
+            weather_data = data.pop('weather_data')
+            data.update(weather_data)
+
         enriched_data = self._enrich_location_data(data)
         logger.info(f"enriched data: {enriched_data}")
         # Validate enriched data using Pydantic model

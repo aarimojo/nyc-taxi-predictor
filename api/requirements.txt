@@ -5,3 +5,4 @@ pydantic
 geopandas
 shapely
 pandas
+requests

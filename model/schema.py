@@ -31,9 +31,16 @@ class TripData(BaseModel):
     # Required input fields (only what we receive)
     PULocationID: int = Field(ge=1, le=265, description="Pickup location ID from taxi zones")
     DOLocationID: int = Field(ge=1, le=265, description="Dropoff location ID from taxi zones")
-    store_and_fwd_flag: str = Field(pattern="^[YN]$", description="Store and forward flag (Y/N)")
     trip_distance: float = Field(ge=0, lt=100, description="Trip distance in miles")
-    tpep_pickup_datetime: datetime = Field(description="Pickup datetime")
+    pickup_datetime: datetime = Field(description="Pickup datetime")
+    tavg: float = Field(..., description="Average temperature in Celsius")
+    tmin: float = Field(..., description="Minimum temperature in Celsius")
+    tmax: float = Field(..., description="Maximum temperature in Celsius")
+    prcp: float = Field(..., description="Precipitation in mm")
+    snow: float = Field(..., description="Snowfall in mm")
+    wdir: float = Field(..., description="Wind direction in degrees")
+    wspd: float = Field(..., description="Wind speed in km/h")
+    pres: float = Field(..., description="Pressure in hPa")
     
     # Derived fields (will be populated from validators)
     Borough_pu: Borough = Field(default=None, description="Pickup borough")
@@ -49,9 +56,9 @@ class TripData(BaseModel):
     @model_validator(mode='after')
     def set_time_based_fields(self) -> 'TripData':
         """Set the time-based fields based on pickup datetime."""
-        hour = self.tpep_pickup_datetime.hour
+        hour = self.pickup_datetime.hour
         self.hour_of_day_pu = hour
-        self.day_of_week_pu = self.tpep_pickup_datetime.weekday()
+        self.day_of_week_pu = self.pickup_datetime.weekday()
         
         # Set time of day
         self.time_of_day_pu = (
@@ -72,11 +79,18 @@ class TripData(BaseModel):
         numerical_features = [
             'trip_distance',
             'day_of_week_pu',
-            'hour_of_day_pu'
+            'hour_of_day_pu',
+            'tavg',
+            'tmin',
+            'tmax',
+            'prcp',
+            'snow',
+            'wdir',
+            'wspd',
+            'pres'
         ]
         
         one_hot_features = [
-            'store_and_fwd_flag',
             'Borough_pu',
             'service_zone_pu',
             'Borough_do',

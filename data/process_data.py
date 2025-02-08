@@ -58,6 +58,8 @@ class DataLoader:
                     print(f"Loading weather data from cache: {cache_file}")
                     _weather_df = pd.read_csv(cache_file)
                     _weather_df['date'] = pd.to_datetime(_weather_df['date'])
+                    _weather_df = _weather_df.drop(columns=['wpgt', 'tsun'])
+                    _weather_df = _weather_df.fillna(0)
                     weather_df = pd.concat([weather_df, _weather_df])
                 else:
                     print(f"Fetching weather data from API for period {start_date.date()} to {end_date.date()}")

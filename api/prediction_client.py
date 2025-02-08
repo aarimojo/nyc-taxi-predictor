@@ -7,6 +7,7 @@ import time
 from fastapi import HTTPException
 from redis_conn import redis_conn
 from logger import Logger
+from schemas.prediction import TripRequestOutgoing
 
 logger = Logger.get_logger('PredictionClient')
 
@@ -14,21 +15,24 @@ class PredictionClient:
     def __init__(self):
         self.redis_client = redis_conn.client
 
-    def get_prediction(self, data: Dict[str, Any], timeout: int = 30) -> Dict[str, Any]:
+    def get_prediction(self, data: TripRequestOutgoing, timeout: int = 30) -> Dict[str, Any]:
         """Send prediction request to model service and wait for response."""
         # Add request ID and convert datetime
+        logger.info(f"Getting prediction for data: {data}")
         request_id = str(uuid.uuid4())
-        data['request_id'] = request_id
         
-        if isinstance(data.get('tpep_pickup_datetime'), datetime):
-            data['tpep_pickup_datetime'] = data['tpep_pickup_datetime'].isoformat()
+        request_data = data.model_dump()
+        request_data['request_id'] = request_id
+        
+        if isinstance(request_data['pickup_datetime'], datetime):
+            request_data['pickup_datetime'] = request_data['pickup_datetime'].isoformat()
 
         logger.info(f"Sending prediction request {request_id}")
-        logger.debug(f"Request data: {data}")
+        logger.debug(f"Request data: {request_data}")
 
         # Send request to model service
         try:
-            self.redis_client.lpush('prediction_requests', json.dumps(data))
+            self.redis_client.lpush('prediction_requests', json.dumps(request_data))
             logger.info(f"Prediction request {request_id} sent successfully")
         except Exception as e:
             logger.error(f"Failed to send prediction request: {str(e)}")
